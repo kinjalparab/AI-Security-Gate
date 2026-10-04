@@ -71,6 +71,7 @@ stage('Gemini AI Security Analysis') {
         }
     }
 
+    
     post {
         success {
             echo 'SECURITY PIPELINE PASSED: Docker image built.'
@@ -79,7 +80,8 @@ stage('Gemini AI Security Analysis') {
             echo 'SECURITY PIPELINE BLOCKED: Inspect the failed stage and reports.'
         }
         always {
-            echo 'Security pipeline execution completed.'
+            archiveArtifacts artifacts: 'reports/bandit-report.json,reports/ai-security-report.md', allowEmptyArchive: true
+            echo 'Security reports archived. Pipeline execution completed.'
         }
     }
 }
