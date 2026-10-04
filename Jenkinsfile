@@ -64,6 +64,25 @@ stage('Gemini AI Security Analysis') {
             }
         }
 
+        stage('Inject Simulated HIGH Finding - TEST ONLY') {
+            steps {
+                writeFile file: 'reports/bandit-report.json', text: '''{
+  "results": [
+    {
+      "test_id": "TEST001",
+      "issue_severity": "HIGH",
+      "issue_confidence": "HIGH",
+      "issue_text": "SIMULATED TEST: Verify Jenkins blocks a high-severity finding.",
+      "filename": "simulated_test.py",
+      "line_number": 1
+    }
+  ]
+}'''
+                echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
+            }
+        }
+
+
         stage('Build Docker Image') {
             steps {
                 bat '"%DOCKER_EXE%" build -t %IMAGE_NAME% .'
