@@ -39,6 +39,19 @@ pipeline {
             }
         }
 
+stage('Gemini AI Security Analysis') {
+    steps {
+        withCredentials([
+            string(
+                credentialsId: 'gemini-api-key',
+                variable: 'GEMINI_API_KEY'
+            )
+        ]) {
+            bat '".jenkins-venv\\Scripts\\python.exe" security\\ai_analyzer.py'
+        }
+    }
+}
+
         stage('Security Gate') {
             steps {
                 bat '".jenkins-venv\\Scripts\\python.exe" security\\security_gate.py'
