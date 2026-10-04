@@ -39,18 +39,44 @@ pipeline {
             }
         }
 
-stage('Gemini AI Security Analysis') {
-    steps {
-        withCredentials([
-            string(
-                credentialsId: 'gemini-api-key',
-                variable: 'GEMINI_API_KEY'
-            )
-        ]) {
-            bat '".jenkins-venv\\Scripts\\python.exe" security\\ai_analyzer.py'
+        stage('Gemini AI Security Analysis') {
+            when {
+                not {
+                    branch 'test/security-gate-blocking'
+                }
+            }
+            steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'gemini-api-key',
+                        variable: 'GEMINI_API_KEY'
+                    )
+                ]) {
+                    bat '".jenkins-venv\\Scripts\\python.exe" security\\ai_analyzer.py'
+                }
+            }
         }
-    }
-}
+
+        stage('Inject Simulated HIGH Finding - TEST ONLY') {
+            when {
+                branch 'test/security-gate-blocking'
+            }
+            steps {
+                writeFile file: 'reports/bandit-report.json', text: '''{
+    "results": [
+        {
+            "test_id": "TEST001",
+            "issue_severity": "HIGH",
+            "issue_confidence": "HIGH",
+            "issue_text": "SIMULATED TEST: Verify Jenkins blocks a high-severity finding.",
+            "filename": "simulated_test.py",
+            "line_number": 1
+        }
+    ]
+}'''
+                echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
+            }
+        }
 
         stage('Security Gate') {
             steps {
@@ -64,25 +90,6 @@ stage('Gemini AI Security Analysis') {
             }
         }
 
-        stage('Inject Simulated HIGH Finding - TEST ONLY') {
-            steps {
-                writeFile file: 'reports/bandit-report.json', text: '''{
-  "results": [
-    {
-      "test_id": "TEST001",
-      "issue_severity": "HIGH",
-      "issue_confidence": "HIGH",
-      "issue_text": "SIMULATED TEST: Verify Jenkins blocks a high-severity finding.",
-      "filename": "simulated_test.py",
-      "line_number": 1
-    }
-  ]
-}'''
-                echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
-            }
-        }
-
-
         stage('Build Docker Image') {
             steps {
                 bat '"%DOCKER_EXE%" build -t %IMAGE_NAME% .'
@@ -90,7 +97,6 @@ stage('Gemini AI Security Analysis') {
         }
     }
 
-    
     post {
         success {
             echo 'SECURITY PIPELINE PASSED: Docker image built.'
