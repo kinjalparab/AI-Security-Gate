@@ -60,12 +60,10 @@ stage('Gemini AI Security Analysis') {
 }
 
 
-        stage('Inject Simulated HIGH Finding - TEST ONLY') {
-            when {
-                branch 'test/security-gate-blocking'
-            }
-            steps {
-                writeFile file: 'reports/bandit-report.json', text: '''{
+    
+stage('Inject Simulated HIGH Finding - TEST ONLY') {
+    steps {
+        writeFile file: 'reports/bandit-report.json', text: '''{
     "results": [
         {
             "test_id": "TEST001",
@@ -77,9 +75,9 @@ stage('Gemini AI Security Analysis') {
         }
     ]
 }'''
-                echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
-            }
-        }
+        echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
+    }
+}
 
         stage('Security Gate') {
             steps {
