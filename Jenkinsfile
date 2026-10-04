@@ -39,23 +39,26 @@ pipeline {
             }
         }
 
-        stage('Gemini AI Security Analysis') {
-            when {
-                not {
-                    branch 'test/security-gate-blocking'
-                }
-            }
-            steps {
-                withCredentials([
-                    string(
-                        credentialsId: 'gemini-api-key',
-                        variable: 'GEMINI_API_KEY'
-                    )
-                ]) {
-                    bat '".jenkins-venv\\Scripts\\python.exe" security\\ai_analyzer.py'
-                }
-            }
+        
+stage('Gemini AI Security Analysis') {
+    when {
+        beforeAgent true
+        not {
+            branch 'test/security-gate-blocking'
         }
+    }
+    steps {
+        withCredentials([
+            string(
+                credentialsId: 'gemini-api-key',
+                variable: 'GEMINI_API_KEY'
+            )
+        ]) {
+            bat '".jenkins-venv\\Scripts\\python.exe" security\\ai_analyzer.py'
+        }
+    }
+}
+
 
         stage('Inject Simulated HIGH Finding - TEST ONLY') {
             when {
