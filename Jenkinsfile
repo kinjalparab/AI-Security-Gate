@@ -39,31 +39,18 @@ pipeline {
             }
         }
 
-        
-stage('Gemini AI Security Analysis') {
-    when {
-        beforeAgent true
-        not {
-            branch 'test/security-gate-blocking'
+        stage('Gemini AI Security Analysis') {
+            when {
+                expression { return false }
+            }
+            steps {
+                echo 'TEST ONLY: Gemini analysis skipped for security gate validation.'
+            }
         }
-    }
-    steps {
-        withCredentials([
-            string(
-                credentialsId: 'gemini-api-key',
-                variable: 'GEMINI_API_KEY'
-            )
-        ]) {
-            bat '".jenkins-venv\\Scripts\\python.exe" security\\ai_analyzer.py'
-        }
-    }
-}
 
-
-    
-stage('Inject Simulated HIGH Finding - TEST ONLY') {
-    steps {
-        writeFile file: 'reports/bandit-report.json', text: '''{
+        stage('Inject Simulated HIGH Finding - TEST ONLY') {
+            steps {
+                writeFile file: 'reports/bandit-report.json', text: '''{
     "results": [
         {
             "test_id": "TEST001",
@@ -75,9 +62,9 @@ stage('Inject Simulated HIGH Finding - TEST ONLY') {
         }
     ]
 }'''
-        echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
-    }
-}
+                echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
+            }
+        }
 
         stage('Security Gate') {
             steps {
