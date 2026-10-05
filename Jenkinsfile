@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -10,6 +9,7 @@ pipeline {
     }
 
     stages {
+
         stage('Verify Tools') {
             steps {
                 bat '"%PYTHON%" --version'
@@ -35,34 +35,20 @@ pipeline {
         stage('Bandit Security Scan') {
             steps {
                 bat 'if not exist reports mkdir reports'
+
                 bat '".jenkins-venv\\Scripts\\python.exe" -m bandit -r app security -f json -o reports/bandit-report.json --exit-zero'
+
+                echo 'Bandit security scan completed.'
             }
         }
 
         stage('Gemini AI Security Analysis') {
-            when {
-                expression { return false }
-            }
             steps {
-                echo 'TEST ONLY: Gemini analysis skipped for security gate validation.'
-            }
-        }
+                echo 'Starting Gemini AI security analysis...'
 
-        stage('Inject Simulated HIGH Finding - TEST ONLY') {
-            steps {
-                writeFile file: 'reports/bandit-report.json', text: '''{
-    "results": [
-        {
-            "test_id": "TEST001",
-            "issue_severity": "HIGH",
-            "issue_confidence": "HIGH",
-            "issue_text": "SIMULATED TEST: Verify Jenkins blocks a high-severity finding.",
-            "filename": "simulated_test.py",
-            "line_number": 1
-        }
-    ]
-}'''
-                echo 'TEST ONLY: Injected a simulated HIGH-severity finding.'
+                bat '".jenkins-venv\\Scripts\\python.exe" security\\gemini_analysis.py'
+
+                echo 'Gemini AI security analysis completed.'
             }
         }
 
@@ -86,14 +72,19 @@ pipeline {
     }
 
     post {
+
         success {
-            echo 'SECURITY PIPELINE PASSED: Docker image built.'
+            echo 'SECURITY PIPELINE PASSED: Docker image built successfully.'
         }
+
         failure {
-            echo 'SECURITY PIPELINE BLOCKED: Inspect the failed stage and reports.'
+            echo 'SECURITY PIPELINE BLOCKED: Inspect the failed stage and security reports.'
         }
+
         always {
-            archiveArtifacts artifacts: 'reports/bandit-report.json,reports/ai-security-report.md', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'reports/bandit-report.json,reports/ai-security-report.md',
+                             allowEmptyArchive: true
+
             echo 'Security reports archived. Pipeline execution completed.'
         }
     }
